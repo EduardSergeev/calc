@@ -28,7 +28,7 @@ opEq :: Spec
 opEq = 
   it "op equivalence" $ do
     property $ \(Op (op, f)) x y -> monadicIO $ do
-      r <- run $ runHandler (valid op x y)
+      r <- run $ runHandler (valid x op y)
       assert $ r == Right (x `f` y)
 
 
@@ -36,16 +36,18 @@ wai :: Spec
 wai =
   with (return app) $ do
     describe "GET /add" $ do
-      it "responds with 200" $ do
-        get "/add/2/3" `shouldRespondWith` 200
-      it "responds with result" $ do
-        get "/add/2/3" `shouldRespondWith` "5.0"
-      it "responds with 200" $ do
-        get "/div/2/0" `shouldRespondWith` 200
-      it "responds with 400" $ do
-        get "/add/2/abc" `shouldRespondWith` 400
-      it "responds with 400" $ do
-        get "/wrong" `shouldRespondWith` 400
+      it "2 + 3" $ do
+        get "/2/add/3" `shouldRespondWith` "5.0" { matchStatus = 200 }
+    describe "GET /div" $ do
+      it "3 / 2" $ do
+        get "/3/div/2" `shouldRespondWith` "1.5" { matchStatus = 200 }
+      it "2 / 0" $ do
+        get "/2/div/0" `shouldRespondWith` "null" { matchStatus = 200 }
+    describe "GET invalid" $ do
+      it "bad argument" $ do
+        get "/2/add/abc" `shouldRespondWith` 400
+      it "bad request" $ do
+        get "/bad/bad" `shouldRespondWith` 400
 
 
 spec :: Spec

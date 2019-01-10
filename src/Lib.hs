@@ -8,13 +8,14 @@ module Lib (
   , valid
   ) where
 
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Servant
+import qualified Data.Map.Strict as M
+import           Network.Wai
+import           Network.Wai.Handler.Warp
+import           Servant
 
 
 type API =
-  Capture "op" String :> Capture "x" Double :> Capture "y" Double :> Get '[JSON] Double :<|>
+  Capture "x" Double :> Capture "op" String :> Capture "y" Double :> Get '[JSON] Double :<|>
   CaptureAll "invalid" String :> Get '[JSON] NoContent
 
 
@@ -23,15 +24,20 @@ server =
   valid :<|>
   invalid
 
-valid :: String -> Double -> Double -> Handler Double
-valid op x y = 
-  case op of
-    "add" -> return $ x + y
-    "sub" -> return $ x - y
-    "mul" -> return $ x * y
-    "div" -> return $ x / y
-    _ -> throwError err400 { errBody = "Non-supported operation" }
+valid :: Double -> String -> Double -> Handler Double
+valid x op y = 
+  case M.lookup op ops of
+    Just o -> return $ x `o` y
+    Nothing -> throwError err400 { errBody = "Non-supported operation" }
 
+ops :: M.Map String (Double -> Double -> Double)
+ops = M.fromList [
+    ("add", (+))
+  , ("sub", (-))
+  , ("mul", (*))
+  , ("div", (/))
+  ]
+    
 invalid :: [String] -> Handler NoContent
 invalid _ =
   throwError err400 { errBody = "Invalid arguments" }
