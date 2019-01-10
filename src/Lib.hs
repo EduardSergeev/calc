@@ -13,13 +13,15 @@ import Network.Wai.Handler.Warp
 import Servant
 
 
-type API
-  = Capture "op" String :> Capture "x" Double :> Capture "y" Double :> Get '[JSON] Double
-  :<|> CaptureAll "invalid" String :> Get '[JSON] NoContent
+type API =
+  Capture "op" String :> Capture "x" Double :> Capture "y" Double :> Get '[JSON] Double :<|>
+  CaptureAll "invalid" String :> Get '[JSON] NoContent
 
 
 server :: Server API
-server = valid :<|> invalid
+server =
+  valid :<|>
+  invalid
 
 valid :: String -> Double -> Double -> Handler Double
 valid op x y = 
