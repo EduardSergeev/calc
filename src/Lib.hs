@@ -5,6 +5,7 @@
 module Lib (
     startApp
   , app
+  , valid
   ) where
 
 import Network.Wai
